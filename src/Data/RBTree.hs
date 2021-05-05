@@ -5,6 +5,9 @@ module Data.RBTree (
 , fromList
 , toList
 , balanced
+, size
+, singleton
+, delete
 )
  where
 

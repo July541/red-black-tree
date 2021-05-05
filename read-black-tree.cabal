@@ -17,11 +17,10 @@ category:            Data
 extra-source-files:  CHANGELOG.md
 
 library
-  exposed-modules:     Data.RBTree,
-                       Data.RBTree.Internal
-  -- other-modules:
+  exposed-modules:     Data.RBTree
+  other-modules:       Data.RBTree.Internal
   -- other-extensions:
-  build-depends:       base ^>=4.14.1.0
+  build-depends:       base >= 4.6 && < 5
   hs-source-dirs:      src
   default-language:    Haskell2010
 
@@ -30,7 +29,7 @@ test-suite red-black-tree-test
   type:                exitcode-stdio-1.0
   hs-source-dirs:      test/exe
   main-is:             Main.hs
-  build-depends:       base ^>=4.14.1.0,
+  build-depends:       base >= 4.6 && < 5,
                        tasty,
                        tasty-quickcheck,
                        red-black-tree

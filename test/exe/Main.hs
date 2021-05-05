@@ -2,14 +2,13 @@
 
 module Main (main) where
 
-import Data.List ( sort )
-import qualified Data.List as L ( delete )
-import System.Environment
-
-import Test.Tasty
-import Test.Tasty.QuickCheck
-import Data.RBTree as RBT
-    ( size, singleton, balanced, toList, fromList, delete )
+import           Data.List             (sort)
+import qualified Data.List             as L (delete)
+import           Data.RBTree           as RBT (balanced, delete, fromList,
+                                               singleton, size, toList)
+import           System.Environment    (setEnv)
+import           Test.Tasty            (TestTree, defaultMain, testGroup)
+import           Test.Tasty.QuickCheck (ASCIIString, label, testProperty, (==>))
 
 main :: IO ()
 main = do

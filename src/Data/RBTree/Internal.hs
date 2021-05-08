@@ -36,12 +36,7 @@ size = \case Nil -> 0
              node -> sz node
 
 member :: Ord a => a -> RBNode a -> Bool
-member _ Nil = False
-member target node =
-  case target `compare` value node of
-    EQ -> True
-    LT -> target `member` left node
-    GT -> target `member` right node
+member target node = compare target `memberBy` node
 -- TODO: inlinable
 
 notMember :: Ord a => a -> RBNode a -> Bool
@@ -229,3 +224,11 @@ delete x = mkBlack . delete' x
                                                         (RBNode s r2 Black v2 (1 + sz + size r2))
                                                         Black v1 (sz1 + sz2)
            Nil                     -> RBNode l1 node Black v1 (sz1 + sz2)
+
+memberBy :: Ord a => (a -> Ordering) -> RBNode a -> Bool
+memberBy _ Nil = False
+memberBy cmp node =
+  case cmp $ value node of
+    EQ -> True
+    LT -> cmp `memberBy` left node
+    GT -> cmp `memberBy` right node

@@ -120,13 +120,21 @@ mkRed Nil = Nil
 mkRed node = node{ color = Red }
 
 insert :: Ord a => a -> RBNode a -> RBNode a
-insert x = mkBlack . insert' x
+insert target = insertBy (compare target) target
+
+delete :: Ord a => a -> RBNode a -> RBNode a
+delete target = deleteBy (compare target)
+
+insertBy :: Ord a => (a -> Ordering) -> a -> RBNode a -> RBNode a
+insertBy cmp x node
+  | memberBy cmp node = updateBy cmp (const x) node
+  | otherwise = mkBlack $ insert' cmp x node
   where
-    insert' target Nil = RBNode Nil Nil Red target 1
-    insert' target node =
-      case target `compare` value node of
-        GT -> rotate node{ right = insert' target (right node), sz = sz node + 1 }
-        _  -> rotate node{ left = insert' target (left node), sz = sz node + 1 }
+    insert' _ target Nil = RBNode Nil Nil Red target 1
+    insert' cmp target node@RBNode{..} =
+      case cmp value of
+        GT -> rotate node{ right = insert' cmp target right, sz = sz + 1 }
+        _  -> rotate node{ left = insert' cmp target left, sz = sz + 1 }
 
 rotate :: RBNode a -> RBNode a
 rotate = \case Nil -> Nil
@@ -148,27 +156,27 @@ rotate = \case Nil -> Nil
                              Red v2 sz1
                node -> node
 
-delete :: Ord a => a -> RBNode a -> RBNode a
-delete x = mkBlack . delete' x
+deleteBy :: Ord a => (a -> Ordering) -> RBNode a -> RBNode a
+deleteBy cmp = mkBlack . delete' cmp
   where
     delete' _ Nil = Nil
-    delete' target node@RBNode{..} =
-      case target `compare` value of
-        LT -> deleteL target node
-        GT -> deleteR target node
+    delete' cmp node@RBNode{..} =
+      case cmp value of
+        LT -> deleteL cmp node
+        GT -> deleteR cmp node
         EQ -> fuse left right
 
-    deleteL :: Ord a => a -> RBNode a -> RBNode a
-    deleteL target node
-      | color node == Red   = node{ left = delete' target (left node) }
-      | color node == Black = balanceL $ node{ left = delete' target (left node) }
-      | otherwise           = error "Unexpected1"
+    deleteL :: Ord a => (a -> Ordering) -> RBNode a -> RBNode a
+    deleteL cmp node
+      | color node == Red   = node{ left = delete' cmp (left node) }
+      | color node == Black = balanceL $ node{ left = delete' cmp (left node) }
+      | otherwise           = error "Unexpected deleteL"
 
-    deleteR :: Ord a => a -> RBNode a -> RBNode a
-    deleteR target node
-      | color node == Red   = node{ right = delete' target (right node) }
-      | color node == Black = balanceR $ node{ right = delete' target (right node) }
-      | otherwise           = error "Unexpected2"
+    deleteR :: Ord a => (a -> Ordering) -> RBNode a -> RBNode a
+    deleteR cmp node
+      | color node == Red   = node{ right = delete' cmp (right node) }
+      | color node == Black = balanceR $ node{ right = delete' cmp (right node) }
+      | otherwise           = error "Unexpected deleteR"
 
     -- deletion occurred from the left subtree, left subtree is shorter than the right,
     -- rebalance required.
@@ -227,8 +235,26 @@ delete x = mkBlack . delete' x
 
 memberBy :: Ord a => (a -> Ordering) -> RBNode a -> Bool
 memberBy _ Nil = False
-memberBy cmp node =
-  case cmp $ value node of
+memberBy cmp RBNode{..} =
+  case cmp value of
     EQ -> True
-    LT -> cmp `memberBy` left node
-    GT -> cmp `memberBy` right node
+    LT -> cmp `memberBy` left
+    GT -> cmp `memberBy` right
+
+lookupBy :: Ord a => (a -> Ordering) -> RBNode a -> Maybe a
+lookupBy _ Nil = Nothing
+lookupBy cmp RBNode{..} =
+  case cmp value of
+    EQ -> Just value
+    LT -> cmp `lookupBy` left
+    GT -> cmp `lookupBy` right
+
+-- | Follows the comparator to update the tree node by the updating rule.
+updateBy :: Ord a => (a -> Ordering) -> (a -> a) -> RBNode a -> RBNode a
+updateBy _ _ Nil = Nil
+updateBy cmp f node@RBNode{..} =
+  case cmp value of
+    EQ -> node{ value = f value }
+    LT -> node{ left = updateBy cmp f left }
+    GT -> node{ right = updateBy cmp f right }
+

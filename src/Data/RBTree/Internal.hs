@@ -134,6 +134,7 @@ insertBy cmp x node
     insert' cmp target node@RBNode{..} =
       case cmp value of
         GT -> rotate node{ right = insert' cmp target right, sz = sz + 1 }
+        EQ -> error "undefined behavior"
         _  -> rotate node{ left = insert' cmp target left, sz = sz + 1 }
 
 rotate :: RBNode a -> RBNode a
